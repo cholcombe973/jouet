@@ -11,8 +11,7 @@ fn main() {
     prompt();
     let stdin = std::io::BufReader::new(std::io::stdin());
     for line in stdin.lines() {
-        let result = shell::eval_ln(line.unwrap());
-        println!("{:?}", result);
+        shell::eval_ln(line.unwrap());
         prompt();
     }
 }

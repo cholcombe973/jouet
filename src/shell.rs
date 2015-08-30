@@ -7,6 +7,6 @@
 /**
  * Parse a string, then eval the resulting AST.
  **/
-pub fn eval_ln(input : String) -> String {
-    return input;
+pub fn eval_ln(input : String) {
+    println!("{:?}", input);
 }
