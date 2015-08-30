@@ -2,7 +2,7 @@
 // struct AST
 // struct Context
 // parse_ln(input : String, &mut cxt : Context)
-// eval(&mut cxt : Context) -> String
+// eval(&mut cxt : Context)
 
 /**
  * Parse a string, then eval the resulting AST.
