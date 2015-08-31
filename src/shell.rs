@@ -1,5 +1,24 @@
 extern crate regex;
+use std::string::FromUtf8Error;
 use std::process::Command;
+
+#[derive(Debug)]
+pub enum ShellError {
+    FromUtf8Error(FromUtf8Error),
+    RegexError(regex::Error),
+}
+
+impl From<regex::Error> for ShellError {
+    fn from(err: regex::Error) -> ShellError {
+        ShellError::RegexError(err)
+    }
+}
+
+impl From<FromUtf8Error> for ShellError {
+    fn from(err: FromUtf8Error) -> ShellError {
+        ShellError::FromUtf8Error(err)
+    }
+}
 
 enum TYPE {
     STRING,
@@ -17,8 +36,8 @@ impl Token {
     }
 }
 
-fn parse_ln(input : String) -> Token {
-    let whitespace_exp = regex::Regex::new(r"\s+").unwrap();
+fn parse_ln(input : String) -> Result<Token, ShellError> {
+    let whitespace_exp = try!(regex::Regex::new(r"\s+"));
     let mut tokens = Vec::new();
     for word in whitespace_exp.split(&input) {
         // later we can use regular expressions to tag tokens
@@ -38,10 +57,10 @@ fn parse_ln(input : String) -> Token {
     if tokens.len() > 0 {
         root.replace_children(Some(tokens));
     }
-    return root;
+    return Ok(root);
 }
 
-fn eval_cmd(code : Token) -> Token {
+fn eval_cmd(code : Token) -> Result<Token, ShellError> {
     let mut result = Command::new(code.data);
     match code.children {
         None => {},
@@ -52,14 +71,17 @@ fn eval_cmd(code : Token) -> Token {
             }
         },
     }
-    let stdout = String::from_utf8(result.output().unwrap().stdout).unwrap();
-    return Token{tag: TYPE::STRING, data: stdout, children: None}
+    let stdout = try!(String::from_utf8(result.output().unwrap().stdout));
+    return Ok(Token{tag: TYPE::STRING, data: stdout, children: None});
 }
 
-fn eval(code : Token) -> Token {
+fn eval(code : Token) -> Result<Token,ShellError> {
     match code.tag {
         TYPE::STRING => {
-            return eval_cmd(code);
+            let token = try!(
+                eval_cmd(code)
+            );
+            return Ok(token);
         }
     }
 }
@@ -68,7 +90,7 @@ fn eval(code : Token) -> Token {
  * Parse a string, then eval the resulting Token.
  **/
 pub fn eval_ln(input : String) {
-    let code = parse_ln(input);
-    let result = eval(code);
+    let code = parse_ln(input).unwrap();
+    let result = eval(code).unwrap();
     println!("{}", result.data);
 }
